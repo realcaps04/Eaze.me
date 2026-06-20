@@ -1,10 +1,13 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_providers.dart';
+import '../../themes/app_colors.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/terms_and_conditions_sheet.dart';
 import 'login_screen.dart';
 
 final _registerLoadingProvider = StateProvider<bool>((ref) => false);
@@ -23,12 +26,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phone = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
+  late final TapGestureRecognizer _termsTapRecognizer;
 
   bool _obscure = true;
   bool _agree = false;
 
   @override
+  void initState() {
+    super.initState();
+    _termsTapRecognizer = TapGestureRecognizer()
+      ..onTap = () => showTermsAndConditionsSheet(context);
+  }
+
+  @override
   void dispose() {
+    _termsTapRecognizer.dispose();
     _fullName.dispose();
     _email.dispose();
     _phone.dispose();
@@ -192,9 +204,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
                             Expanded(
-                              child: Text(
-                                'I agree to the Terms & Conditions',
-                                style: theme.textTheme.bodyMedium,
+                              child: Text.rich(
+                                TextSpan(
+                                  style: theme.textTheme.bodyMedium,
+                                  children: [
+                                    const TextSpan(text: 'I agree to the '),
+                                    TextSpan(
+                                      text: 'Terms & Conditions',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.indigo,
+                                        fontWeight: FontWeight.w700,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: AppColors.indigo,
+                                      ),
+                                      recognizer: _termsTapRecognizer,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
