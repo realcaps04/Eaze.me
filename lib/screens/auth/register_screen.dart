@@ -3,14 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/country_phone_codes.dart';
 import '../../providers/auth_providers.dart';
 import '../../themes/app_colors.dart';
 import '../../widgets/app_text_field.dart';
+import '../../widgets/phone_number_field.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/terms_and_conditions_sheet.dart';
 import 'login_screen.dart';
 
 final _registerLoadingProvider = StateProvider<bool>((ref) => false);
+
+final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+final _namePattern = RegExp(r"^[a-zA-Z][a-zA-Z\s'.-]{1,}$");
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -21,6 +26,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _phoneFieldKey = GlobalKey<PhoneNumberFieldState>();
   final _fullName = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
@@ -30,6 +36,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _obscure = true;
   bool _agree = false;
+  CountryPhoneCode _selectedCountry = CountryPhoneCodes.defaultCountry;
 
   @override
   void initState() {
@@ -49,6 +56,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  String? _validateFullName(String? value) {
+    final trimmed = (value ?? '').trim();
+    if (trimmed.isEmpty) return 'Full name is required';
+    if (trimmed.length < 2) return 'Enter at least 2 characters';
+    if (!_namePattern.hasMatch(trimmed)) return 'Enter a valid full name';
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final trimmed = (value ?? '').trim();
+    if (trimmed.isEmpty) return 'Email is required';
+    if (!_emailPattern.hasMatch(trimmed)) return 'Enter a valid email';
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return 'Phone number is required';
+    if (digits.length < _selectedCountry.minLength ||
+        digits.length > _selectedCountry.maxLength) {
+      return 'Enter a valid phone number';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) return 'Password is required';
+    if (password.length < 6) return 'Minimum 6 characters';
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if ((value ?? '').isEmpty) return 'Please confirm your password';
+    if (value != _password.text) return 'Passwords do not match';
+    return null;
+  }
+
   Future<void> _register() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
@@ -59,6 +104,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
+    final phoneE164 = _phoneFieldKey.currentState?.fullE164() ??
+        _selectedCountry.formatE164(_phone.text.replaceAll(RegExp(r'\D'), ''));
+
     ref.read(_registerLoadingProvider.notifier).state = true;
     try {
       await ref.read(authServiceProvider).signUp(
@@ -66,7 +114,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _password.text,
             data: {
               'full_name': _fullName.text.trim(),
-              'phone': _phone.text.trim(),
+              'phone': phoneE164,
+              'country_code': _selectedCountry.isoCode,
               'terms_accepted_at': DateTime.now().toUtc().toIso8601String(),
             },
           );
@@ -101,6 +150,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               child: SingleChildScrollView(
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -124,10 +174,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         label: 'Full name',
                         prefixIcon: Icons.person_outline,
                         textInputAction: TextInputAction.next,
-                        validator: (v) {
-                          if ((v ?? '').trim().isEmpty) return 'Full name is required';
-                          return null;
-                        },
+                        validator: _validateFullName,
                       ),
                       const SizedBox(height: 12),
                       AppTextField(
@@ -136,23 +183,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Icons.mail_outline,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        validator: (v) {
-                          final value = (v ?? '').trim();
-                          if (value.isEmpty) return 'Email is required';
-                          if (!value.contains('@')) return 'Enter a valid email';
-                          return null;
-                        },
+                        validator: _validateEmail,
                       ),
                       const SizedBox(height: 12),
-                      AppTextField(
+                      PhoneNumberField(
+                        key: _phoneFieldKey,
                         controller: _phone,
-                        label: 'Phone number',
-                        prefixIcon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
+                        initialCountry: _selectedCountry,
                         textInputAction: TextInputAction.next,
-                        validator: (v) {
-                          if ((v ?? '').trim().isEmpty) return 'Phone number is required';
-                          return null;
+                        validator: _validatePhone,
+                        onCountryChanged: (country) {
+                          setState(() => _selectedCountry = country);
+                          _formKey.currentState?.validate();
                         },
                       ),
                       const SizedBox(height: 12),
@@ -168,12 +210,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             _obscure ? Icons.visibility_off : Icons.visibility,
                           ),
                         ),
-                        validator: (v) {
-                          final value = v ?? '';
-                          if (value.isEmpty) return 'Password is required';
-                          if (value.length < 6) return 'Minimum 6 characters';
-                          return null;
-                        },
+                        validator: _validatePassword,
                       ),
                       const SizedBox(height: 12),
                       AppTextField(
@@ -182,11 +219,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Icons.lock_outline,
                         obscureText: true,
                         textInputAction: TextInputAction.done,
-                        validator: (v) {
-                          if ((v ?? '').isEmpty) return 'Please confirm your password';
-                          if (v != _password.text) return 'Passwords do not match';
-                          return null;
-                        },
+                        validator: _validateConfirmPassword,
                       ),
                       const SizedBox(height: 14),
                       Container(
@@ -250,4 +283,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 }
-
