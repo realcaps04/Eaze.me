@@ -87,18 +87,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const _LoginHero(),
                       const SizedBox(height: 20),
                       const _WorkerShowcase(),
                       const SizedBox(height: 22),
-                      _GlassCard(
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: _GlassCard(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                               AppTextField(
                                 controller: _email,
                                 label: 'Email',
@@ -160,13 +162,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       ),
+                    ),
                       const SizedBox(height: 22),
                       const _OrDivider(),
                       const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _SocialButton(
+                      SizedBox(
+                        width: double.infinity,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _SocialButton(
                               assetPath: 'assets/icons/google.svg',
                               label: 'Google',
                               onPressed: loading
@@ -194,6 +199,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ],
                       ),
+                    ),
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -227,57 +233,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _LoginHero extends StatelessWidget {
+class _LoginHero extends StatefulWidget {
   const _LoginHero();
+
+  @override
+  State<_LoginHero> createState() => _LoginHeroState();
+}
+
+class _LoginHeroState extends State<_LoginHero>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.indigo.withValues(alpha: 0.28),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.indigo.withValues(alpha: 0.28),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset(
+                    'assets/images/eazeme_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              'assets/images/eazeme_logo.png',
-              fit: BoxFit.cover,
             ),
-          ),
+            const SizedBox(height: 18),
+            Text(
+              'Welcome back',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontFamily: AppTheme.displayFont,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.5,
+                height: 1.05,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Log in to continue to Eaze.me',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 18),
-        Text(
-          'Welcome back',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontFamily: AppTheme.displayFont,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.5,
-            height: 1.05,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Log in to continue to Eaze.me',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -433,30 +479,58 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
   static const _cardWidth = 84.0;
   static const _gap = 10.0;
   static const _step = _cardWidth + _gap;
+  static const _cardHeight = 104.0;
 
   late final ScrollController _scrollController;
+  late final List<_WorkerItem> _loopItems;
   Timer? _autoScrollTimer;
-  int _index = 0;
+  int _dotIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    final items = _WorkerShowcase._items;
+    _loopItems = [...items, ...items, ...items];
     _scrollController = ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(items.length * _step);
+    });
+
+    _scrollController.addListener(_syncDotIndex);
+
     _autoScrollTimer = Timer.periodic(
       const Duration(seconds: 3),
       (_) => _advance(),
     );
   }
 
+  void _syncDotIndex() {
+    if (!_scrollController.hasClients) return;
+    final next = (_scrollController.offset / _step).round() %
+        _WorkerShowcase._items.length;
+    if (next != _dotIndex) {
+      setState(() => _dotIndex = next);
+    }
+  }
+
   void _advance() {
     if (!_scrollController.hasClients || !mounted) return;
 
-    _index = (_index + 1) % _WorkerShowcase._items.length;
-    final target = _index * _step;
+    final items = _WorkerShowcase._items;
+    final oneSetWidth = items.length * _step;
+    var next = _scrollController.offset + _step;
+
+    // Seamless loop: always scroll forward, never backward.
+    if (next >= oneSetWidth * 2) {
+      _scrollController.jumpTo(next - oneSetWidth);
+      next = _scrollController.offset + _step;
+    }
 
     _scrollController.animateTo(
-      target,
-      duration: const Duration(milliseconds: 650),
+      next,
+      duration: const Duration(milliseconds: 750),
       curve: Curves.easeInOutCubic,
     );
   }
@@ -464,7 +538,9 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_syncDotIndex)
+      ..dispose();
     super.dispose();
   }
 
@@ -482,18 +558,38 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 104,
+          height: _cardHeight + 8,
           child: ListView.separated(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: _WorkerShowcase._items.length,
+            itemCount: _loopItems.length,
             separatorBuilder: (_, __) => const SizedBox(width: _gap),
-            itemBuilder: (context, i) =>
-                _WorkerCard(item: _WorkerShowcase._items[i]),
+            itemBuilder: (context, index) =>
+                _WorkerCard(item: _loopItems[index]),
           ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_WorkerShowcase._items.length, (index) {
+            final active = index == _dotIndex;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: active ? 18 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: active
+                    ? AppColors.indigo
+                    : AppColors.indigo.withValues(alpha: 0.22),
+              ),
+            );
+          }),
         ),
       ],
     );
@@ -506,21 +602,56 @@ class _WorkerItem {
   final String image;
 }
 
-class _WorkerCard extends StatelessWidget {
+class _WorkerCard extends StatefulWidget {
   const _WorkerCard({required this.item});
 
   final _WorkerItem item;
 
   @override
+  State<_WorkerCard> createState() => _WorkerCardState();
+}
+
+class _WorkerCardState extends State<_WorkerCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _kenBurns;
+
+  @override
+  void initState() {
+    super.initState();
+    _kenBurns = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _kenBurns.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 84,
+      height: 104,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(item.image, fit: BoxFit.cover),
+            AnimatedBuilder(
+              animation: _kenBurns,
+              builder: (context, child) {
+                final scale = 1.0 + (_kenBurns.value * 0.06);
+                return Transform.scale(
+                  scale: scale,
+                  alignment: Alignment.center,
+                  child: child,
+                );
+              },
+              child: Image.asset(widget.item.image, fit: BoxFit.cover),
+            ),
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -541,7 +672,7 @@ class _WorkerCard extends StatelessWidget {
               right: 8,
               bottom: 8,
               child: Text(
-                item.label,
+                widget.item.label,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
