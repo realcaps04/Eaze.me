@@ -62,6 +62,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final loading = ref.watch(_forgotLoadingProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.canvas,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -79,6 +80,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
                   child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
                     child: _ForgotGlassCard(
                       child: Form(
                         key: _formKey,
@@ -153,7 +155,7 @@ class _ForgotGlassCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.72),
+            color: Colors.white.withValues(alpha: 0.58),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
             boxShadow: [
