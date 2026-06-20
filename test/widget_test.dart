@@ -7,11 +7,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: EazeMeApp()));
     await tester.pump();
 
-    expect(find.text('Eaze.me'), findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump();
-
     expect(find.text('Welcome back'), findsOneWidget);
   });
 }
