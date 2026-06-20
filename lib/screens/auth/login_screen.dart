@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../providers/auth_providers.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_theme.dart';
@@ -295,7 +296,7 @@ class _LoginHeroState extends State<_LoginHero>
             ),
             const SizedBox(height: 6),
             Text(
-              'Log in to continue to Eaze.me',
+              'Log in to continue to ${AppConstants.appName}',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -486,7 +487,6 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
 
   late final PageController _pageController;
   Timer? _autoSwipeTimer;
-  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -511,12 +511,6 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
     );
   }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentIndex = page % _WorkerShowcase._items.length;
-    });
-  }
-
   @override
   void dispose() {
     _autoSwipeTimer?.cancel();
@@ -526,70 +520,38 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final activeItem = _WorkerShowcase._items[_currentIndex];
+    return SizedBox(
+      height: _cardHeight + 8,
+      child: PageView.builder(
+        controller: _pageController,
+        itemBuilder: (context, index) {
+          final item =
+              _WorkerShowcase._items[index % _WorkerShowcase._items.length];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          'Trusted professionals, on demand',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          child: Text(
-            activeItem.label,
-            key: ValueKey(activeItem.label),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.indigo,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: _cardHeight + 8,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            itemBuilder: (context, index) {
-              final item =
-                  _WorkerShowcase._items[index % _WorkerShowcase._items.length];
+          return AnimatedBuilder(
+            animation: _pageController,
+            builder: (context, child) {
+              var scale = 0.86;
+              var opacity = 0.65;
 
-              return AnimatedBuilder(
-                animation: _pageController,
-                builder: (context, child) {
-                  var scale = 0.86;
-                  var opacity = 0.65;
+              if (_pageController.position.haveDimensions) {
+                final page = _pageController.page ?? _initialPage.toDouble();
+                final delta = (page - index).abs();
+                scale = (1 - delta * 0.14).clamp(0.86, 1.0);
+                opacity = (1 - delta * 0.35).clamp(0.65, 1.0);
+              }
 
-                  if (_pageController.position.haveDimensions) {
-                    final page =
-                        _pageController.page ?? _initialPage.toDouble();
-                    final delta = (page - index).abs();
-                    scale = (1 - delta * 0.14).clamp(0.86, 1.0);
-                    opacity = (1 - delta * 0.35).clamp(0.65, 1.0);
-                  }
-
-                  return Center(
-                    child: Transform.scale(
-                      scale: scale,
-                      child: Opacity(opacity: opacity, child: child),
-                    ),
-                  );
-                },
-                child: _WorkerCard(item: item),
+              return Center(
+                child: Transform.scale(
+                  scale: scale,
+                  child: Opacity(opacity: opacity, child: child),
+                ),
               );
             },
-          ),
-        ),
-      ],
+            child: _WorkerCard(item: item),
+          );
+        },
+      ),
     );
   }
 }

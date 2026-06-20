@@ -9,8 +9,8 @@ void main() {
 
     expect(find.text('Eaze.me'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 900));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 2300));
+    await tester.pump();
 
     expect(find.text('Welcome back'), findsOneWidget);
   });

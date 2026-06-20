@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.eazeme" "\0"
-            VALUE "FileDescription", "eaze_me" "\0"
+            VALUE "FileDescription", "Eaze.me" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "eaze_me" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.eazeme. All rights reserved." "\0"
             VALUE "OriginalFilename", "eaze_me.exe" "\0"
-            VALUE "ProductName", "eaze_me" "\0"
+            VALUE "ProductName", "Eaze.me" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
