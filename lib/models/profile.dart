@@ -5,6 +5,7 @@ class Profile {
     required this.email,
     required this.phone,
     required this.avatarUrl,
+    required this.termsAcceptedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -14,6 +15,7 @@ class Profile {
   final String? email;
   final String? phone;
   final String? avatarUrl;
+  final DateTime termsAcceptedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -24,6 +26,7 @@ class Profile {
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      termsAcceptedAt: DateTime.parse(json['terms_accepted_at'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -36,6 +39,7 @@ class Profile {
       'email': email,
       'phone': phone,
       'avatar_url': avatarUrl,
+      'terms_accepted_at': termsAcceptedAt.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

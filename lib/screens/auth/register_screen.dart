@@ -67,6 +67,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             data: {
               'full_name': _fullName.text.trim(),
               'phone': _phone.text.trim(),
+              'terms_accepted_at': DateTime.now().toUtc().toIso8601String(),
             },
           );
       if (!mounted) return;

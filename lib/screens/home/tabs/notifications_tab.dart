@@ -33,7 +33,7 @@ class NotificationsTab extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: (unread ? cs.primary : cs.outline).withOpacity(0.10),
+                    color: (unread ? cs.primary : cs.outline).withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(

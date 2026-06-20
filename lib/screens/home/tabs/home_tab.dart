@@ -170,7 +170,7 @@ class _QuickAction extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.55)),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.55)),
         ),
         child: Column(
           children: [
@@ -180,8 +180,8 @@ class _QuickAction extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.indigo.withOpacity(0.14),
-                    AppColors.violet.withOpacity(0.08),
+                    AppColors.indigo.withValues(alpha: 0.14),
+                    AppColors.violet.withValues(alpha: 0.08),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -255,8 +255,8 @@ class _ActivityTile extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.indigo.withOpacity(0.14),
-                AppColors.violet.withOpacity(0.10),
+                AppColors.indigo.withValues(alpha: 0.14),
+                AppColors.violet.withValues(alpha: 0.10),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

@@ -40,7 +40,7 @@ class ActivityTab extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: cs.primary.withOpacity(0.10),
+                    color: cs.primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(Icons.bolt, color: cs.primary),

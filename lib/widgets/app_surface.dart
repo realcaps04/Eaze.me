@@ -28,7 +28,7 @@ class AppSurface extends StatelessWidget {
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
         border: border
-            ? Border.all(color: cs.outlineVariant.withOpacity(0.55))
+            ? Border.all(color: cs.outlineVariant.withValues(alpha: 0.55))
             : null,
       ),
       child: child,
