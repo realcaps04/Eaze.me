@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -467,94 +466,89 @@ class _WorkerShowcase extends StatefulWidget {
   static const _items = <_WorkerItem>[
     _WorkerItem('Electricians', 'assets/images/worker_electrician.png'),
     _WorkerItem('Plumbers', 'assets/images/worker_plumber.png'),
+    _WorkerItem('Carpenters', 'assets/images/worker_carpenter.png'),
+    _WorkerItem('Painters', 'assets/images/worker_painter.png'),
     _WorkerItem('Cleaners', 'assets/images/worker_cleaner.png'),
-    _WorkerItem('Technicians', 'assets/images/worker_technician.png'),
-    _WorkerItem('Freelancers', 'assets/images/worker_freelancer.png'),
+    _WorkerItem('Housekeeping Staff', 'assets/images/worker_housekeeping.png'),
+    _WorkerItem('AC Technicians', 'assets/images/worker_ac_technician.png'),
+    _WorkerItem(
+      'Refrigerator Technicians',
+      'assets/images/worker_refrigerator_technician.png',
+    ),
+    _WorkerItem(
+      'Washing Machine Technicians',
+      'assets/images/worker_washing_machine_technician.png',
+    ),
+    _WorkerItem(
+      'TV Repair Technicians',
+      'assets/images/worker_tv_repair.png',
+    ),
+    _WorkerItem(
+      'Water Purifier Technicians',
+      'assets/images/worker_water_purifier_technician.png',
+    ),
+    _WorkerItem(
+      'Solar Panel Technicians',
+      'assets/images/worker_solar_technician.png',
+    ),
+    _WorkerItem('CCTV Installers', 'assets/images/worker_cctv_installer.png'),
+    _WorkerItem('Pest Control Experts', 'assets/images/worker_pest_control.png'),
+    _WorkerItem('Handymen', 'assets/images/worker_handyman.png'),
   ];
 
   @override
   State<_WorkerShowcase> createState() => _WorkerShowcaseState();
 }
 
-class _WorkerShowcaseState extends State<_WorkerShowcase>
-    with SingleTickerProviderStateMixin {
-  static const _cardWidth = 84.0;
-  static const _gap = 10.0;
-  static const _step = _cardWidth + _gap;
+class _WorkerShowcaseState extends State<_WorkerShowcase> {
   static const _cardHeight = 104.0;
-  static const _scrollSpeed = 36.0; // px per second, left → right
+  static const _initialPage = 5000;
 
-  late final ScrollController _scrollController;
-  late final List<_WorkerItem> _loopItems;
-  Ticker? _ticker;
-  Duration? _lastTick;
-  bool _marqueeReady = false;
-  int _dotIndex = 0;
+  late final PageController _pageController;
+  Timer? _autoSwipeTimer;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    final items = _WorkerShowcase._items;
-    _loopItems = [...items, ...items, ...items];
-    _scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
+    _pageController = PageController(
+      initialPage: _initialPage,
+      viewportFraction: 0.30,
+    );
+
+    _autoSwipeTimer = Timer.periodic(
+      const Duration(milliseconds: 2800),
+      (_) => _swipeNext(),
+    );
   }
 
-  void _startMarqueeWhenReady() {
-    if (!mounted || _marqueeReady) return;
-    if (!_scrollController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
-      return;
-    }
+  Future<void> _swipeNext() async {
+    if (!_pageController.hasClients || !mounted) return;
 
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    if (maxScroll <= 0) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
-      return;
-    }
-
-    _marqueeReady = true;
-    _scrollController.jumpTo(_WorkerShowcase._items.length * _step);
-
-    _ticker = createTicker(_onTick)..start();
+    await _pageController.nextPage(
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
-  void _onTick(Duration elapsed) {
-    if (!_scrollController.hasClients || !mounted) return;
-
-    if (_lastTick == null) {
-      _lastTick = elapsed;
-      return;
-    }
-
-    final dt = (elapsed - _lastTick!).inMicroseconds / 1000000.0;
-    _lastTick = elapsed;
-
-    final oneSetWidth = _WorkerShowcase._items.length * _step;
-    var next = _scrollController.offset + (_scrollSpeed * dt);
-
-    if (next >= oneSetWidth * 2) {
-      next -= oneSetWidth;
-    }
-
-    _scrollController.jumpTo(next);
-
-    final nextDot = (next / _step).round() % _WorkerShowcase._items.length;
-    if (nextDot != _dotIndex) {
-      setState(() => _dotIndex = nextDot);
-    }
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentIndex = page % _WorkerShowcase._items.length;
+    });
   }
 
   @override
   void dispose() {
-    _ticker?.dispose();
-    _scrollController.dispose();
+    _autoSwipeTimer?.cancel();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final activeItem = _WorkerShowcase._items[_currentIndex];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -566,38 +560,54 @@ class _WorkerShowcaseState extends State<_WorkerShowcase>
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 8),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: Text(
+            activeItem.label,
+            key: ValueKey(activeItem.label),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.indigo,
+            ),
+          ),
+        ),
         const SizedBox(height: 12),
         SizedBox(
           height: _cardHeight + 8,
-          child: ListView.separated(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _loopItems.length,
-            separatorBuilder: (_, __) => const SizedBox(width: _gap),
-            itemBuilder: (context, index) =>
-                _WorkerCard(item: _loopItems[index]),
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            itemBuilder: (context, index) {
+              final item =
+                  _WorkerShowcase._items[index % _WorkerShowcase._items.length];
+
+              return AnimatedBuilder(
+                animation: _pageController,
+                builder: (context, child) {
+                  var scale = 0.86;
+                  var opacity = 0.65;
+
+                  if (_pageController.position.haveDimensions) {
+                    final page =
+                        _pageController.page ?? _initialPage.toDouble();
+                    final delta = (page - index).abs();
+                    scale = (1 - delta * 0.14).clamp(0.86, 1.0);
+                    opacity = (1 - delta * 0.35).clamp(0.65, 1.0);
+                  }
+
+                  return Center(
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Opacity(opacity: opacity, child: child),
+                    ),
+                  );
+                },
+                child: _WorkerCard(item: item),
+              );
+            },
           ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(_WorkerShowcase._items.length, (index) {
-            final active = index == _dotIndex;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: active ? 18 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                color: active
-                    ? AppColors.indigo
-                    : AppColors.indigo.withValues(alpha: 0.22),
-              ),
-            );
-          }),
         ),
       ],
     );
