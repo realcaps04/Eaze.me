@@ -12,6 +12,7 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_theme.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/app_text_field.dart';
+import '../../widgets/aurora_background.dart';
 import '../home/home_shell.dart';
 
 final _loginLoadingProvider = StateProvider<bool>((ref) => false);
@@ -81,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          const _AuroraBackground(),
+          const AuroraBackground(),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -671,75 +672,6 @@ class _OrDivider extends StatelessWidget {
         ),
         Expanded(child: Divider(color: color, thickness: 1)),
       ],
-    );
-  }
-}
-
-class _AuroraBackground extends StatelessWidget {
-  const _AuroraBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: AppColors.canvas),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -90,
-              right: -70,
-              child: _Blob(
-                size: 260,
-                colors: [
-                  AppColors.orange.withValues(alpha: 0.55),
-                  AppColors.orange.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 120,
-              left: -90,
-              child: _Blob(
-                size: 240,
-                colors: [
-                  AppColors.indigo.withValues(alpha: 0.45),
-                  AppColors.indigo.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: -110,
-              right: -60,
-              child: _Blob(
-                size: 300,
-                colors: [
-                  AppColors.violet.withValues(alpha: 0.40),
-                  AppColors.violet.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.colors});
-
-  final double size;
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: colors),
-      ),
     );
   }
 }
