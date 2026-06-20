@@ -67,6 +67,15 @@ class AppTheme {
             width: 1.2,
           ),
         ),
+        errorStyle: const TextStyle(height: 0, fontSize: 0, color: Colors.transparent),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFE53935), width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFE53935), width: 1.5),
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       appBarTheme: AppBarTheme(

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_providers.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_theme.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/app_text_field.dart';
 import '../home/home_shell.dart';
 
@@ -98,6 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: _GlassCard(
                           child: Form(
                             key: _formKey,
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -279,29 +281,7 @@ class _LoginHeroState extends State<_LoginHero>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Center(
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.indigo.withValues(alpha: 0.28),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    'assets/images/eazeme_logo.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
+            const AppLogo(size: 56),
             const SizedBox(height: 18),
             Text(
               'Welcome back',

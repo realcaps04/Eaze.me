@@ -7,35 +7,34 @@ class AppLogo extends StatelessWidget {
 
   final double size;
 
+  static const _assetPath = 'assets/images/eazeme_logo.png';
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final radius = size * 0.286;
 
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.28),
-        gradient: AppColors.brandGradient(),
+        borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: AppColors.indigo.withOpacity(0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: AppColors.indigo.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: Center(
-        child: Text(
-          'E',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: cs.onPrimary,
-            fontWeight: FontWeight.w800,
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.asset(
+          _assetPath,
+          fit: BoxFit.cover,
+          width: size,
+          height: size,
         ),
       ),
     );
   }
 }
-
