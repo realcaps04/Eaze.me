@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -234,13 +235,13 @@ class _LoginHero extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: AppColors.indigo.withValues(alpha: 0.28),
@@ -250,27 +251,29 @@ class _LoginHero extends StatelessWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             child: Image.asset(
               'assets/images/eazeme_logo.png',
               fit: BoxFit.cover,
             ),
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 18),
         Text(
           'Welcome back',
-          style: theme.textTheme.displaySmall?.copyWith(
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineMedium?.copyWith(
             fontFamily: AppTheme.displayFont,
             fontWeight: FontWeight.w400,
             letterSpacing: -0.5,
             height: 1.05,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           'Log in to continue to Eaze.me',
-          style: theme.textTheme.bodyLarge?.copyWith(
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -411,7 +414,7 @@ class _SocialButton extends StatelessWidget {
   }
 }
 
-class _WorkerShowcase extends StatelessWidget {
+class _WorkerShowcase extends StatefulWidget {
   const _WorkerShowcase();
 
   static const _items = <_WorkerItem>[
@@ -423,27 +426,73 @@ class _WorkerShowcase extends StatelessWidget {
   ];
 
   @override
+  State<_WorkerShowcase> createState() => _WorkerShowcaseState();
+}
+
+class _WorkerShowcaseState extends State<_WorkerShowcase> {
+  static const _cardWidth = 84.0;
+  static const _gap = 10.0;
+  static const _step = _cardWidth + _gap;
+
+  late final ScrollController _scrollController;
+  Timer? _autoScrollTimer;
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _autoScrollTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _advance(),
+    );
+  }
+
+  void _advance() {
+    if (!_scrollController.hasClients || !mounted) return;
+
+    _index = (_index + 1) % _WorkerShowcase._items.length;
+    final target = _index * _step;
+
+    _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           'Trusted professionals, on demand',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         SizedBox(
-          height: 150,
+          height: 104,
           child: ListView.separated(
+            controller: _scrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, i) => _WorkerCard(item: _items[i]),
+            itemCount: _WorkerShowcase._items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: _gap),
+            itemBuilder: (context, i) =>
+                _WorkerCard(item: _WorkerShowcase._items[i]),
           ),
         ),
       ],
@@ -465,9 +514,9 @@ class _WorkerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 118,
+      width: 84,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -482,21 +531,25 @@ class _WorkerCard extends StatelessWidget {
                       Colors.transparent,
                       Colors.black.withValues(alpha: 0.55),
                     ],
-                    stops: const [0.45, 1.0],
+                    stops: const [0.4, 1.0],
                   ),
                 ),
               ),
             ),
             Positioned(
-              left: 10,
-              right: 10,
-              bottom: 10,
+              left: 8,
+              right: 8,
+              bottom: 8,
               child: Text(
                 item.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  height: 1.15,
                 ),
               ),
             ),
