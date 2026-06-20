@@ -1,0 +1,10 @@
+-- Eaze.me Supabase schema
+--
+-- Tables are not created yet. Schema will be added here when you specify
+-- the database design.
+--
+-- Planned tables (for reference only — do not run until defined):
+--   - profiles
+--   - activities
+--   - notifications
+--   - settings
