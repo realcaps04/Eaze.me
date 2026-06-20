@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -475,15 +476,19 @@ class _WorkerShowcase extends StatefulWidget {
   State<_WorkerShowcase> createState() => _WorkerShowcaseState();
 }
 
-class _WorkerShowcaseState extends State<_WorkerShowcase> {
+class _WorkerShowcaseState extends State<_WorkerShowcase>
+    with SingleTickerProviderStateMixin {
   static const _cardWidth = 84.0;
   static const _gap = 10.0;
   static const _step = _cardWidth + _gap;
   static const _cardHeight = 104.0;
+  static const _scrollSpeed = 36.0; // px per second, left → right
 
   late final ScrollController _scrollController;
   late final List<_WorkerItem> _loopItems;
-  Timer? _autoScrollTimer;
+  Ticker? _ticker;
+  Duration? _lastTick;
+  bool _marqueeReady = false;
   int _dotIndex = 0;
 
   @override
@@ -492,55 +497,58 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
     final items = _WorkerShowcase._items;
     _loopItems = [...items, ...items, ...items];
     _scrollController = ScrollController();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      _scrollController.jumpTo(items.length * _step);
-    });
-
-    _scrollController.addListener(_syncDotIndex);
-
-    _autoScrollTimer = Timer.periodic(
-      const Duration(seconds: 3),
-      (_) => _advance(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
   }
 
-  void _syncDotIndex() {
-    if (!_scrollController.hasClients) return;
-    final next = (_scrollController.offset / _step).round() %
-        _WorkerShowcase._items.length;
-    if (next != _dotIndex) {
-      setState(() => _dotIndex = next);
+  void _startMarqueeWhenReady() {
+    if (!mounted || _marqueeReady) return;
+    if (!_scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
+      return;
     }
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startMarqueeWhenReady());
+      return;
+    }
+
+    _marqueeReady = true;
+    _scrollController.jumpTo(_WorkerShowcase._items.length * _step);
+
+    _ticker = createTicker(_onTick)..start();
   }
 
-  void _advance() {
+  void _onTick(Duration elapsed) {
     if (!_scrollController.hasClients || !mounted) return;
 
-    final items = _WorkerShowcase._items;
-    final oneSetWidth = items.length * _step;
-    var next = _scrollController.offset + _step;
-
-    // Seamless loop: always scroll forward, never backward.
-    if (next >= oneSetWidth * 2) {
-      _scrollController.jumpTo(next - oneSetWidth);
-      next = _scrollController.offset + _step;
+    if (_lastTick == null) {
+      _lastTick = elapsed;
+      return;
     }
 
-    _scrollController.animateTo(
-      next,
-      duration: const Duration(milliseconds: 750),
-      curve: Curves.easeInOutCubic,
-    );
+    final dt = (elapsed - _lastTick!).inMicroseconds / 1000000.0;
+    _lastTick = elapsed;
+
+    final oneSetWidth = _WorkerShowcase._items.length * _step;
+    var next = _scrollController.offset + (_scrollSpeed * dt);
+
+    if (next >= oneSetWidth * 2) {
+      next -= oneSetWidth;
+    }
+
+    _scrollController.jumpTo(next);
+
+    final nextDot = (next / _step).round() % _WorkerShowcase._items.length;
+    if (nextDot != _dotIndex) {
+      setState(() => _dotIndex = nextDot);
+    }
   }
 
   @override
   void dispose() {
-    _autoScrollTimer?.cancel();
-    _scrollController
-      ..removeListener(_syncDotIndex)
-      ..dispose();
+    _ticker?.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -564,7 +572,7 @@ class _WorkerShowcaseState extends State<_WorkerShowcase> {
           child: ListView.separated(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: _loopItems.length,
             separatorBuilder: (_, __) => const SizedBox(width: _gap),
             itemBuilder: (context, index) =>
@@ -620,7 +628,7 @@ class _WorkerCardState extends State<_WorkerCard>
     super.initState();
     _kenBurns = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 6),
     )..repeat();
   }
 
@@ -643,7 +651,7 @@ class _WorkerCardState extends State<_WorkerCard>
             AnimatedBuilder(
               animation: _kenBurns,
               builder: (context, child) {
-                final scale = 1.0 + (_kenBurns.value * 0.06);
+                final scale = 1.0 + (Curves.easeInOut.transform(_kenBurns.value) * 0.05);
                 return Transform.scale(
                   scale: scale,
                   alignment: Alignment.center,
